@@ -6,18 +6,24 @@ import matplotlib.pyplot as plt
 
 # Constants for query
 QUERY_STRING_CONSTANT = " -has:links -has:mentions -has:media -has:hashtags"
-NUM_TWEETS_BY_LANGUAGE = 10
+NUM_TWEETS_BY_LANGUAGE = 70
 
 # Words to search for in the query by language
 keywords = {
-    "en": ["the"],
-    "fr": ["le"],
-    "es": ["el"],
-    "de": ["die"],
+    "en": ["covid"],
+    "fr": ["covid"],
+    "es": ["covid"],
+    "de": ["covid"],
 }
 
 # The client object that is used by the API
-client = tweepy.Client(bearer_token=config.BEARER_TOKEN)
+client = tweepy.Client(
+    bearer_token=config.BEARER_TOKEN,
+    access_token=config.ACCESS_TOKEN,
+    access_token_secret=config.ACCESS_TOKEN_SECRET,
+    consumer_key=config.CONSUMER_KEY,
+    consumer_secret=config.CONSUMER_SECRET
+)
 
 
 def get_query_string(lang: str):
@@ -77,24 +83,44 @@ def populate_test_data(n: int, verbose=False):
     return pd.Series(list_of_data_points)
 
 
-# Create dataframe and list of series that will be used
-df = pd.DataFrame()
-series = []
-for language in keywords:
-    # Either use real or test data
-    # new_series = get_tweets_by_lang(language, NUM_TWEETS_BY_LANGUAGE, True)
-    new_series = populate_test_data(NUM_TWEETS_BY_LANGUAGE, True)
-
-    # Append the series into the dataframe
-    series.append(new_series)
-
-    # Use the language as a parameter in the function
-    args = {language: new_series}
-    df = df.assign(**args)
+def append_dataframe_to_existing(new_df: pd.DataFrame, filename: str):
+    """Append this data to the existing pickled data, AND return the concatenated df"""
+    file_df = save_file.read_df_from_file(filename)
+    if isinstance(file_df, bool) and not file_df:
+        save_file.write_df_to_file(filename, new_df)
+        return new_df
+    else:
+        concat_df = pd.concat([new_df, file_df], ignore_index=True)
+        save_file.write_df_to_file(filename, concat_df)
+        return concat_df
 
 
-# save_file.write_df_to_file("data.pkl", df)
-df = save_file.read_df_from_file("data.pkl")
+def reset_file_data(filename: str):
+    save_file.delete_file(filename)
+
+
+def get_new_dataframe():
+    """Create dataframe and list of series that will be used"""
+    df = pd.DataFrame()
+    for language in keywords:
+        # Either use real or test data
+        new_series = get_tweets_by_lang(language, NUM_TWEETS_BY_LANGUAGE, True)
+        # new_series = populate_test_data(NUM_TWEETS_BY_LANGUAGE, True)
+
+        # Use the language as a parameter in the function
+        args = {language: new_series}
+        df = df.assign(**args)
+
+    return df
+
+
+def new_empty_dataframe():
+    return pd.DataFrame()
+
+
+df = append_dataframe_to_existing(get_new_dataframe(), "data.pkl")
+# df = append_dataframe_to_existing(new_empty_dataframe(), "data.pkl")
+
 
 # Create the histograms
 print(df)
