@@ -1,12 +1,12 @@
 import numpy as np
 import tweepy
-import config
+import config, save_file
 import pandas as pd
 import matplotlib.pyplot as plt
 
 # Constants for query
 QUERY_STRING_CONSTANT = " -has:links -has:mentions -has:media -has:hashtags"
-NUM_TWEETS_BY_LANGUAGE = 75
+NUM_TWEETS_BY_LANGUAGE = 10
 
 # Words to search for in the query by language
 keywords = {
@@ -82,8 +82,8 @@ df = pd.DataFrame()
 series = []
 for language in keywords:
     # Either use real or test data
-    new_series = get_tweets_by_lang(language, NUM_TWEETS_BY_LANGUAGE, True)
-    # new_series = populate_test_data(NUM_TWEETS_BY_LANGUAGE, True)
+    # new_series = get_tweets_by_lang(language, NUM_TWEETS_BY_LANGUAGE, True)
+    new_series = populate_test_data(NUM_TWEETS_BY_LANGUAGE, True)
 
     # Append the series into the dataframe
     series.append(new_series)
@@ -91,6 +91,10 @@ for language in keywords:
     # Use the language as a parameter in the function
     args = {language: new_series}
     df = df.assign(**args)
+
+
+# save_file.write_df_to_file("data.pkl", df)
+df = save_file.read_df_from_file("data.pkl")
 
 # Create the histograms
 print(df)
