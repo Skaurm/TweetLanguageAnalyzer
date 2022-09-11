@@ -1,20 +1,19 @@
 import pickle
-import pandas as pd
 import os
 
 
 # Write
-def write_df_to_file(filename: str, df: pd.DataFrame):
+def write_to_file(filename: str, data: any):
 	with open(filename, 'wb') as outp:
-		pickle.dump(df, outp, pickle.HIGHEST_PROTOCOL)
+		pickle.dump(data, outp, pickle.HIGHEST_PROTOCOL)
 
 
 # Read
-def read_df_from_file(filename: str) -> object:
+def read_from_file(filename: str) -> object:
 	try:
 		with open(filename, 'rb') as inp:
-			df = pickle.load(inp)
-			return df
+			data = pickle.load(inp)
+			return data
 	except IOError:
 		return False
 
